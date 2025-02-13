@@ -1,113 +1,88 @@
 """
-The Main Web-based GUI code for the Pythonese application using Flask
+The Main CLI code for the Pythonese application
 """
+# ! All External Modules or Python Package imports are not my work. Credit is as listed:
+# ! asyncio by Guido van Rossum https://docs.python.org/3/library/asyncio.html
+# ! threading by Guido van Rossum https://docs.python.org/3/library/threading.html
+# ! keyboard by BoppreH https://pypi.org/project/keyboard/
+# ! SpeechRecognition by Anthony Zhang https://pypi.org/project/SpeechRecognition/
+# ! gTTS by Pierre Nicolas Durette https://pypi.org/project/gTTS/
+# ! playsound by Szymon Mikler https://pypi.org/project/playsound3/
+# ! googletrans by SuHun Han https://pypi.org/project/googletrans/
 
-from flask import Flask, render_template, request, jsonify
+# ! The code below is written by me, Videsh Arivazhagan, the author of this project.
+
+import asyncio
+import threading
+import keyboard
 import speech_recognition as sr
 from gtts import gTTS
 from playsound3 import playsound as ps
 from googletrans import Translator
-import asyncio
 
-app = Flask(__name__)
-
-language_codes = {
-    'afrikaans': 'af',
-    'albanian': 'sq',
-    'amharic': 'am',
-    'arabic': 'ar',
-    'armenian': 'hy',
-    'azerbaijani': 'az',
-    'bengali': 'bn',
-    'chinese': 'zh-CN',
-    'croatian': 'hr',
-    'czech': 'cs',
-    'danish': 'da',
-    'dutch': 'nl',
-    'english': 'en',
-    'french': 'fr',
-    'german': 'de',
-    'hindi': 'hi',
-    'italian': 'it',
-    'japanese': 'ja',
-    'korean': 'ko',
-    'portuguese': 'pt',
-    'russian': 'ru',
-    'spanish': 'es',
-    'swahili': 'sw',
-    'tamil': 'ta',
-    'telugu': 'te',
-    'thai': 'th',
-    'turkish': 'tr',
-    'vietnamese': 'vi',
+LANGUAGE_CODES = {
+    'afrikaans': 'af', 'albanian': 'sq', 'amharic': 'am', 'arabic': 'ar',
+    'armenian': 'hy', 'azerbaijani': 'az', 'bengali': 'bn', 'chinese': 'zh-CN',
+    'croatian': 'hr', 'czech': 'cs', 'danish': 'da', 'dutch': 'nl',
+    'english': 'en', 'french': 'fr', 'german': 'de', 'hindi': 'hi',
+    'italian': 'it', 'japanese': 'ja', 'korean': 'ko', 'portuguese': 'pt',
+    'russian': 'ru', 'spanish': 'es', 'swahili': 'sw', 'tamil': 'ta',
+    'telugu': 'te', 'thai': 'th', 'turkish': 'tr', 'vietnamese': 'vi',
     'zulu': 'zu'
 }
 
-stop_flag = False
+EXIT_FLAG = False
 
+def get_language_code(prompt):
+    """Prompt the user for a language and return its code
+    Parameters:
+        prompt (str): Prompt to display to the user
+    """
+    while True:
+        language = input(prompt).strip().lower()
+        if language in LANGUAGE_CODES:
+            return language, LANGUAGE_CODES[language]
+        print("Language not recognized. Please try again.")
 
-@app.route('/')
-def index():
-    """Render the main page."""
-    return render_template('index.html')
+def monitor_exit():
+    """Monitor keyboard input to exit on 'q' press.
+    Sets the global EXIT_FLAG to True when 'q' is pressed.
+    """
+    global EXIT_FLAG
+    keyboard.wait('q')
+    EXIT_FLAG = True
+    print("\nExit key detected. Quitting application...")
 
+async def main():
+    """Main function to run the Pythonese application.
+    Uses speech recognition to listen for audio input and translates it to another language.
+    """
 
-@app.route('/start', methods=['POST'])
-def start_translation():
-    """Start the translation process."""
-    global stop_flag
-    stop_flag = False
-
-    input_language = request.json.get('input_language', '').strip().lower()
-    output_language = request.json.get('output_language', '').strip().lower()
-
-    if input_language not in language_codes or output_language not in language_codes:
-        return jsonify({'error': 'Invalid language entered. Please try again.'}), 400
-
-    input_lang_code = language_codes[input_language]
-    output_lang_code = language_codes[output_language]
-
-    asyncio.run(run_translation(input_lang_code, output_lang_code))
-    return jsonify({'message': 'Translation process started.'})
-
-
-@app.route('/stop', methods=['POST'])
-def stop_translation():
-    """Stop the translation process."""
-    global stop_flag
-    stop_flag = True
-    return jsonify({'message': 'Stopping translation...'})
-
-
-async def run_translation(input_lang_code, output_lang_code):
-    """Run the translation process."""
-    global stop_flag
-    r = sr.Recognizer()
+    recognizer = sr.Recognizer()
     mic = sr.Microphone(device_index=0)
 
-    while not stop_flag:
+    input_language, input_lang_code = get_language_code("Enter the input language: ")
+    output_lang_code = get_language_code("Enter the output language: ")
+
+    while not EXIT_FLAG:
         try:
             with mic as source:
                 print("Adjusting for ambient noise. Please wait...")
-                r.adjust_for_ambient_noise(source, duration=1)
-                print(f"Listening in {input_lang_code}...")
+                recognizer.adjust_for_ambient_noise(source, duration=1)
+                print(f"Listening in {input_language}. Press 'q' to quit.")
 
-                audio = r.listen(source, timeout=None, phrase_time_limit=10)
-                if stop_flag:
-                    print("Stopped by user.")
-                    return
+                audio = recognizer.listen(source, timeout=None, phrase_time_limit=10)
 
-            # Recognize speech
-            recognized_text = r.recognize_google(audio, language=input_lang_code)
+            recognized_text = recognizer.recognize_google(audio, language=input_lang_code)
             print(f"You said: {recognized_text}")
 
-            # Translate text (sync call)
             translator = Translator()
-            translated = translator.translate(recognized_text, src=input_lang_code, dest=output_lang_code)
+            translated = translator.translate(recognized_text,
+                                              src=input_lang_code,
+                                              dest=output_lang_code)
             translated_text = translated.text
             print(f"Translated text: {translated_text}")
 
-            # Convert to speech
             tts = gTTS(text=translated_text, lang=output_lang_code)
             tts.save("translated.mp3")
             print("Playing translated speech...")
@@ -120,8 +95,9 @@ async def run_translation(input_lang_code, output_lang_code):
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    print("Translation loop ended.")
+    print("Exiting program. Goodbye!")
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    exit_thread = threading.Thread(target=monitor_exit, daemon=True)
+    exit_thread.start()
+    asyncio.run(main())
