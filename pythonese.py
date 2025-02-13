@@ -2,6 +2,7 @@
 The Main CLI code for the Pythonese application
 """
 # ! All External Modules or Python Package imports are not my work. Credit is as listed:
+# ! os by Guido van Rossum https://docs.python.org/3/library/os.html
 # ! asyncio by Guido van Rossum https://docs.python.org/3/library/asyncio.html
 # ! threading by Guido van Rossum https://docs.python.org/3/library/threading.html
 # ! keyboard by BoppreH https://pypi.org/project/keyboard/
@@ -12,6 +13,7 @@ The Main CLI code for the Pythonese application
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
+import os
 import asyncio
 import threading
 import keyboard
@@ -34,9 +36,9 @@ LANGUAGE_CODES = {
 EXIT_FLAG = False
 
 def get_language_code(prompt):
-    """Prompt the user for a language and return its code
-    Parameters:
-        prompt (str): Prompt to display to the user
+    """
+    Prompt the user for a language and return its code
+    :param prompt: The prompt to display to the user
     """
     while True:
         language = input(prompt).strip().lower()
@@ -45,24 +47,25 @@ def get_language_code(prompt):
         print("Language not recognized. Please try again.")
 
 def monitor_exit():
-    """Monitor keyboard input to exit on 'q' press.
-    Sets the global EXIT_FLAG to True when 'q' is pressed.
-    """
+    """Monitor keyboard input to exit on 'q' press"""
     global EXIT_FLAG
     keyboard.wait('q')
     EXIT_FLAG = True
     print("\nExit key detected. Quitting application...")
 
 async def main():
-    """Main function to run the Pythonese application.
-    Uses speech recognition to listen for audio input and translates it to another language.
-    """
+    """Main function to run the Pythonese application."""
+    global EXIT_FLAG
 
+    try:
+        os.system("cls")
+    except Exception as e:
+        os.system("clear")
     recognizer = sr.Recognizer()
     mic = sr.Microphone(device_index=0)
 
     input_language, input_lang_code = get_language_code("Enter the input language: ")
-    output_lang_code = get_language_code("Enter the output language: ")
+    output_language, output_lang_code = get_language_code("Enter the output language: ")
 
     while not EXIT_FLAG:
         try:
@@ -70,16 +73,15 @@ async def main():
                 print("Adjusting for ambient noise. Please wait...")
                 recognizer.adjust_for_ambient_noise(source, duration=1)
                 print(f"Listening in {input_language}. Press 'q' to quit.")
-
                 audio = recognizer.listen(source, timeout=None, phrase_time_limit=10)
 
             recognized_text = recognizer.recognize_google(audio, language=input_lang_code)
             print(f"You said: {recognized_text}")
 
             translator = Translator()
-            translated = translator.translate(recognized_text,
-                                              src=input_lang_code,
-                                              dest=output_lang_code)
+            translated = await translator.translate(recognized_text,
+                                                    src=input_lang_code,
+                                                    dest=output_lang_code)
             translated_text = translated.text
             print(f"Translated text: {translated_text}")
 
