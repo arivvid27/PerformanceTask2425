@@ -3,6 +3,7 @@ The Main CLI code for the Pythonese application
 """
 # ! All External Modules or Python Package imports are not my work. Credit is as listed:
 # ! os by Guido van Rossum https://docs.python.org/3/library/os.html
+# ! time by Guido van Rossum https://docs.python.org/3/library/time.html
 # ! asyncio by Guido van Rossum https://docs.python.org/3/library/asyncio.html
 # ! threading by Guido van Rossum https://docs.python.org/3/library/threading.html
 # ! keyboard by BoppreH https://pypi.org/project/keyboard/
@@ -14,6 +15,7 @@ The Main CLI code for the Pythonese application
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
 import os
+import time
 import asyncio
 import threading
 import colorama
@@ -69,15 +71,17 @@ async def main():
     mic = sr.Microphone(device_index=0)
 
     print(Fore.GREEN + "=== Welcome to Pythonese Translator ===" + Style.RESET_ALL)
+    time.sleep(2)
     input_language, input_lang_code = get_language_code("Enter the input language: ")
     output_language, output_lang_code = get_language_code("Enter the output language: ")
+    print(Fore.RED + "Press 'q' to quit at any time." + Style.RESET_ALL)
 
     while not EXIT_FLAG:
         try:
             with mic as source:
                 print(Fore.BLUE + "Adjusting for ambient noise. Please wait..." + Style.RESET_ALL)
                 recognizer.adjust_for_ambient_noise(source, duration=1)
-                print(Fore.CYAN + f"Listening in {input_language}. Press 'q' to quit." + Style.RESET_ALL)
+                print(Fore.CYAN + f"Listening in {input_language}." + Style.RESET_ALL)
                 audio = recognizer.listen(source, timeout=None, phrase_time_limit=10)
 
             recognized_text = recognizer.recognize_google(audio, language=input_lang_code)

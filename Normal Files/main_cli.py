@@ -66,7 +66,7 @@ async def main():
     mic = sr.Microphone(device_index=0)
 
     input_language, input_lang_code = get_language_code("Enter the input language: ")
-    output_language, output_lang_code = get_language_code("Enter the output language: ")
+    output_lang_code = get_language_code("Enter the output language: ")
 
     while not keyboard.is_pressed('q'):
         try:
@@ -95,8 +95,8 @@ async def main():
             print("Could not understand audio. Please try again.")
         except sr.RequestError as e:
             print(f"Request error: {e}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        except ValueError as e:
+            print(f"A value error occurred: {e}")
 
     print("\nThank you for using Pythonese! Goodbye!")
 
