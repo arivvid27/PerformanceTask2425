@@ -1,5 +1,5 @@
 """
-The Main code for the Pythonese application
+Live Translation CLI for the Pythonese application
 """
 # ! All External Modules or Python Package imports are not my work. Credit is as listed:
 # ! os by Guido van Rossum https://docs.python.org/3/library/os.html
@@ -9,8 +9,6 @@ The Main code for the Pythonese application
 # ! colorama by Jonathan Hartley https://pypi.org/project/colorama/
 # ! keyboard by BoppreH https://pypi.org/project/keyboard/
 # ! SpeechRecognition by Anthony Zhang https://pypi.org/project/SpeechRecognition/
-# ! gTTS by Pierre Nicolas Durette https://pypi.org/project/gTTS/
-# ! playsound by Szymon Mikler https://pypi.org/project/playsound3/
 # ! googletrans by SuHun Han https://pypi.org/project/googletrans/
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
@@ -22,8 +20,6 @@ import threading
 import colorama
 import keyboard
 import speech_recognition as sr
-from gtts import gTTS
-from playsound3 import playsound as ps
 from googletrans import Translator
 from colorama import Fore, Style
 
@@ -61,7 +57,7 @@ def monitor_exit():
     print(Fore.YELLOW + "\nExit key detected. Quitting application..." + Style.RESET_ALL)
 
 async def main():
-    """Main function to run the Pythonese application."""
+    """Main function to run the live translation."""
     global EXIT_FLAG
 
     try:
@@ -71,11 +67,13 @@ async def main():
     recognizer = sr.Recognizer()
     mic = sr.Microphone(device_index=0)
 
-    print(Fore.GREEN + "=== Welcome to Pythonese Translator ===" + Style.RESET_ALL)
+    print(Fore.GREEN + "=== Welcome to Pythonese Live Translator ===" + Style.RESET_ALL)
     time.sleep(2)
     input_language, input_lang_code = get_language_code("Enter the input language: ")
     output_language, output_lang_code = get_language_code("Enter the output language: ")
     print(Fore.RED + "Press 'q' to quit at any time." + Style.RESET_ALL)
+
+    translator = Translator()
 
     while not EXIT_FLAG:
         try:
@@ -83,29 +81,22 @@ async def main():
                 print(Fore.BLUE + "Adjusting for ambient noise. Please wait..." + Style.RESET_ALL)
                 recognizer.adjust_for_ambient_noise(source, duration=1)
                 print(Fore.CYAN + f"Listening in {input_language}." + Style.RESET_ALL)
-                audio = recognizer.listen(source, timeout=None, phrase_time_limit=10)
-
-            recognized_text = recognizer.recognize_google(audio, language=input_lang_code)
-            print(Fore.GREEN + "You said: " + Style.RESET_ALL + f"{recognized_text}")
-
-            translator = Translator()
-            translated = await translator.translate(recognized_text,
-                                                    src=input_lang_code,
-                                                    dest=output_lang_code)
-            translated_text = translated.text
-            print(Fore.GREEN + "Translated text: " + Style.RESET_ALL + f"{translated_text}")
-
-            tts = gTTS(text=translated_text, lang=output_lang_code)
-            tts.save("translated.mp3")
-            print(Fore.MAGENTA + "Playing translated speech..." + Style.RESET_ALL)
-            ps("translated.mp3")
+                print(Fore.GREEN + "Translated text: ")
+                while not EXIT_FLAG:
+                    audio = recognizer.listen(source, timeout=None, phrase_time_limit=5)
+                    recognized_text = recognizer.recognize_google(audio, language=input_lang_code)
+                    translated = await translator.translate(recognized_text,
+                                                            src=input_lang_code,
+                                                            dest=output_lang_code)
+                    translated_text = translated.text
+                    print(Fore.YELLOW + translated_text + Style.RESET_ALL)
 
         except sr.UnknownValueError:
-            print(Fore.RED + "Could not understand audio. Please try again." + Style.RESET_ALL)
+            print(Fore.RED + "Could not understand audio. Please try again." + Style.RESET_ALL, end='\r')
         except sr.RequestError as e:
-            print(Fore.RED + f"Request error: {e}" + Style.RESET_ALL)
+            print(Fore.RED + f"Request error: {e}" + Style.RESET_ALL, end='\r')
         except Exception as e:
-            print(Fore.RED + f"An error occurred: {e}" + Style.RESET_ALL)
+            print(Fore.RED + f"An error occurred: {e}" + Style.RESET_ALL, end='\r')
 
     print(Fore.YELLOW + "Exiting program. Goodbye!" + Style.RESET_ALL)
 
