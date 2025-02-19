@@ -1,11 +1,12 @@
 """
-The Main CLI code for the Pythonese application
+The Main code for the Pythonese application
 """
 # ! All External Modules or Python Package imports are not my work. Credit is as listed:
 # ! os by Guido van Rossum https://docs.python.org/3/library/os.html
 # ! time by Guido van Rossum https://docs.python.org/3/library/time.html
 # ! asyncio by Guido van Rossum https://docs.python.org/3/library/asyncio.html
 # ! threading by Guido van Rossum https://docs.python.org/3/library/threading.html
+# ! colorama by Jonathan Hartley https://pypi.org/project/colorama/
 # ! keyboard by BoppreH https://pypi.org/project/keyboard/
 # ! SpeechRecognition by Anthony Zhang https://pypi.org/project/SpeechRecognition/
 # ! gTTS by Pierre Nicolas Durette https://pypi.org/project/gTTS/
@@ -44,7 +45,8 @@ EXIT_FLAG = False
 def get_language_code(prompt):
     """
     Prompt the user for a language and return its code
-    :param prompt: The prompt to display to the user
+    prompt{str}: The prompt to display to the user
+    return{string}: Returns the language code needed for the gTTS module
     """
     while True:
         language = input(Fore.CYAN + prompt + Style.RESET_ALL).strip().lower()
@@ -53,14 +55,18 @@ def get_language_code(prompt):
         print(Fore.RED + "Language not recognized. Please try again." + Style.RESET_ALL)
 
 def monitor_exit():
-    """Monitor keyboard input to exit on 'q' press"""
+    """
+    Monitor keyboard input to exit on 'q' press
+    """
     global EXIT_FLAG
     keyboard.wait('q')
     EXIT_FLAG = True
     print(Fore.YELLOW + "\nExit key detected. Quitting application..." + Style.RESET_ALL)
 
 async def main():
-    """Main function to run the Pythonese application."""
+    """
+    Main function to run the Pythonese application.
+    """
     global EXIT_FLAG
 
     try:
