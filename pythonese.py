@@ -15,6 +15,8 @@ The Main code for the Pythonese application
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
+import subprocess
+import sys
 import os
 import time
 import asyncio
