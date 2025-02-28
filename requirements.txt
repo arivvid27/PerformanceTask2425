@@ -1,0 +1,11 @@
+os
+time
+asyncio
+threading
+colorama
+keyboard
+speech_recognition
+gtts
+playsound3
+googletrans
+colorama
