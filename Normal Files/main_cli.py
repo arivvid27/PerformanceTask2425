@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     import subprocess
     import sys
     import os
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', f'{requirements.txt}'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
     import time
     import asyncio
     import threading

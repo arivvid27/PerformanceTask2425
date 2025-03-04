@@ -31,17 +31,17 @@ except ModuleNotFoundError:
     import subprocess
     import sys
     import os
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', f'{requirements.txt}'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
     import time
     import asyncio
     import threading
     import colorama
+    from colorama import Fore, Style
     import keyboard
     import speech_recognition as sr
     from gtts import gTTS
     from playsound3 import playsound as ps
     from googletrans import Translator
-    from colorama import Fore, Style
 colorama.init(autoreset=True)
 
 LANGUAGE_CODES = {
