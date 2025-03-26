@@ -15,34 +15,20 @@ The Main code for the Pythonese application
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
-try:
-    import os
-    import time
-    import asyncio
-    import threading
-    import colorama
-    import keyboard
-    import speech_recognition as sr
-    from gtts import gTTS
-    from playsound3 import playsound as ps
-    from googletrans import Translator
-    from colorama import Fore, Style
-except ModuleNotFoundError:
-    import subprocess
-    import sys
-    import os
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
-    import time
-    import asyncio
-    import threading
-    import colorama
-    from colorama import Fore, Style
-    import keyboard
-    import speech_recognition as sr
-    from gtts import gTTS
-    from playsound3 import playsound as ps
-    from googletrans import Translator
-colorama.init(autoreset=True)
+import subprocess
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
+
+import os
+import time
+import asyncio
+import threading
+import colorama
+import keyboard
+import speech_recognition as sr
+from gtts import gTTS
+from playsound3 import playsound as ps
+from googletrans import Translator
+from colorama import Fore, Style
 
 LANGUAGE_CODES = {
     'afrikaans': 'af', 'albanian': 'sq', 'amharic': 'am', 'arabic': 'ar',
