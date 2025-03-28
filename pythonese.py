@@ -15,14 +15,19 @@ The Main code for the Pythonese application
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
+# TODO Make this a flask application
+# TODO Replace this with routing
+# TODO Break this program into submodules for better error trapping
+# TODO Rewrite the entire repository.
+
 import subprocess
+import sys
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
 
 import os
 import time
 import asyncio
 import threading
-import colorama
 import keyboard
 import speech_recognition as sr
 from gtts import gTTS

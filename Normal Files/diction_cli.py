@@ -13,6 +13,8 @@ Live Translation CLI for the Pythonese application
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
+# TODO Remove this file, as it is not needed (prototyping)
+
 import os
 import time
 import asyncio
