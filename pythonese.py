@@ -20,20 +20,34 @@ The Main code for the Pythonese application
 # TODO Break this program into submodules for better error trapping
 # TODO Rewrite the entire repository.
 
-import subprocess
-import sys
-subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
-
-import os
-import time
-import asyncio
-import threading
-import keyboard
-import speech_recognition as sr
-from gtts import gTTS
-from playsound3 import playsound as ps
-from googletrans import Translator
-from colorama import Fore, Style
+try:
+    import os
+    import time
+    import asyncio
+    import threading
+    import colorama
+    import keyboard
+    import speech_recognition as sr
+    from gtts import gTTS
+    from playsound3 import playsound as ps
+    from googletrans import Translator
+    from colorama import Fore, Style
+except ModuleNotFoundError:
+    import subprocess
+    import sys
+    import os
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', './requirements.txt'])
+    import time
+    import asyncio
+    import threading
+    import colorama
+    from colorama import Fore, Style
+    import keyboard
+    import speech_recognition as sr
+    from gtts import gTTS
+    from playsound3 import playsound as ps
+    from googletrans import Translator
+colorama.init(autoreset=True)
 
 LANGUAGE_CODES = {
     'afrikaans': 'af', 'albanian': 'sq', 'amharic': 'am', 'arabic': 'ar',
