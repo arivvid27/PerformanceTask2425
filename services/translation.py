@@ -5,7 +5,7 @@ class TranslationService:
     def __init__(self, api_key=None):
         self.api_key = api_key or Config.GEMINI_API_KEY
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-2.0-flash-lite')
     
     def translate_text(self, text, source_lang=None, target_lang="en"):
         """
