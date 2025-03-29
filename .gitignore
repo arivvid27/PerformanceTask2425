@@ -1,1 +1,6 @@
-*.mp3
+**/__pycache__
+*/.env
+*/*.db
+*/*.sqlite3
+**/uploads
+**/instance
