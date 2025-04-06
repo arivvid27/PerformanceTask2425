@@ -1,12 +1,27 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+"""
+The Main code for the Pythonese application
+"""
+# ! All External Modules or Python Package imports are not my work. Credit is as listed:
+
+# ! traceback: https://pypi.org/project/traceback/ By: Python Software Foundation (PSF)
+# ! os: https://docs.python.org/3/library/os.html By: Python Software Foundation (PSF)
+# ! uuid: https://docs.python.org/3/library/uuid.html By: Python Software Foundation (PSF)
+# ! flask: https://pypi.org/project/Flask/ By: Armin Ronacher and contributors
+# ! speech_recognition: https://pypi.org/project/SpeechRecognition/ By: Anthony Lapenna
+# ! google.generativeai: https://pypi.org/project/google-generativeai/ By: Google LLC
+# ! gtts: https://pypi.org/project/gTTS/ By: Eduardo Silva (gTTS)
+# ! pydub: https://pypi.org/project/pydub/ By: James A. Smith (pydub)
+
+# ! The code below is written by me, Videsh Arivazhagan, the author of this project.
+
+import traceback
 import os
+import uuid
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import speech_recognition as sr
 import google.generativeai as genai
 from gtts import gTTS
-import uuid
-import tempfile
 from pydub import AudioSegment
-import traceback
 
 app = Flask(__name__)
 
