@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Pythonese - Translation System{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+        <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">Pythonese Translation System</h1>
+        
+        <div class="flex justify-center gap-4 mb-6">
+            <button id="textTabBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 active-tab">Text Translation</button>
+            <button id="speechTabBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Speech Translation</button>
+        </div>
+        
+        <!-- Text Translation Tab -->
+        <div id="textTranslationTab" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Source Text -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label for="sourceLanguage" class="block font-medium">Source Language</label>
+                        <button id="detectLanguage" class="text-sm text-blue-500 hover:text-blue-700">Detect Language</button>
+                    </div>
+                    <select id="sourceLanguage" class="w-full p-2 border rounded mb-2">
+                        <option value="">Auto Detect</option>
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea id="sourceText" class="w-full h-40 p-2 border rounded resize-none" placeholder="Enter text to translate"></textarea>
+                    <div class="flex justify-between mt-2">
+                        <button id="clearSource" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Clear</button>
+                        <button id="speakSource" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                            <i class="fas fa-volume-up mr-1"></i> Speak
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Target Text -->
+                <div>
+                    <label for="targetLanguage" class="block font-medium mb-2">Target Language</label>
+                    <select id="targetLanguage" class="w-full p-2 border rounded mb-2">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}" {% if code == 'en' %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea id="targetText" class="w-full h-40 p-2 border rounded resize-none" placeholder="Translation will appear here" readonly></textarea>
+                    <div class="flex justify-between mt-2">
+                        <button id="copyTarget" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Copy</button>
+                        <button id="speakTarget" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                            <i class="fas fa-volume-up mr-1"></i> Speak
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button id="translateBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400">
+                    <i class="fas fa-language mr-2"></i> Translate
+                </button>
+            </div>
+        </div>
+        
+        <!-- Speech Translation Tab -->
+        <div id="speechTranslationTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Source Speech -->
+                <div>
+                    <label for="sourceSpeechLanguage" class="block font-medium mb-2">Source Language</label>
+                    <select id="sourceSpeechLanguage" class="w-full p-2 border rounded mb-4">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}-US" {% if code == 'en' %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div class="text-center py-4">
+                        <button id="recordAudioBtn" class="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white">
+                            <i class="fas fa-microphone text-2xl"></i>
+                        </button>
+                        <p class="mt-2 text-sm text-gray-600" id="recordingStatus">Click to start recording</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="block font-medium mb-2">Transcription</label>
+                        <textarea id="transcriptionText" class="w-full h-20 p-2 border rounded resize-none" readonly></textarea>
+                    </div>
+                </div>
+                
+                <!-- Target Speech -->
+                <div>
+                    <label for="targetSpeechLanguage" class="block font-medium mb-2">Target Language</label>
+                    <select id="targetSpeechLanguage" class="w-full p-2 border rounded mb-4">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}" {% if code == 'es' %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div class="mt-4">
+                        <label class="block font-medium mb-2">Translation</label>
+                        <textarea id="translatedSpeechText" class="w-full h-20 p-2 border rounded resize-none" readonly></textarea>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <button id="speakTranslation" class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50">
+                            <i class="fas fa-volume-up mr-1"></i> Speak Translation
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="translateSpeechBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400">
+                    <i class="fas fa-language mr-2"></i> Translate Speech
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}
