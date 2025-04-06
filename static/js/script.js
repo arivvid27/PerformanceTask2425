@@ -87,55 +87,166 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Send audio to backend for processing
-    async function sendAudioForTranslation(audioBlob) {
-        const formData = new FormData();
-        formData.append('audio', audioBlob);
-        formData.append('input_language', inputLanguageSelect.value);
-        formData.append('output_language', outputLanguageSelect.value);
+// Send audio to backend for processing
+async function sendAudioForTranslation(audioBlob) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob);
+    formData.append('input_language', inputLanguageSelect.value);
+    formData.append('output_language', outputLanguageSelect.value);
+    
+    try {
+        statusText.textContent = "Processing speech...";
         
+        // First, check if the audio blob has data
+        if (audioBlob.size === 0) {
+            throw new Error('No audio data recorded. Please try again.');
+        }
+        
+        const response = await fetch('/upload_audio', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'  // Tell server we expect JSON
+            }
+        });
+        
+        let data;
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            console.error('Non-JSON response:', await response.text());
+            throw new Error('Server returned an invalid response format. Expected JSON.');
+        }
+        
+        // Check if the response contains an error
+        if (!response.ok) {
+            throw new Error(data.error || `Server error (${response.status})`);
+        }
+        
+        // Additional validation on the returned data
+        if (!data.recognized_text || !data.translated_text) {
+            throw new Error('Invalid response: missing translation data');
+        }
+        
+        // Update UI with recognition and translation results
+        originalText.value = data.recognized_text;
+        translatedText.value = data.translated_text;
+        originalAudioPath = data.original_audio_path;
+        translatedAudioPath = data.translated_audio_path;
+        
+        // Enable play buttons
+        playOriginalBtn.disabled = false;
+        playTranslationBtn.disabled = false;
+        statusText.textContent = "Translation complete";
+        
+        // Add animation to the translated text
+        translatedText.classList.add('fade-in');
+        setTimeout(() => {
+            translatedText.classList.remove('fade-in');
+        }, 500);
+        
+    } catch (error) {
+        console.error("Error during translation:", error);
+        
+        // Show error message to user
+        statusText.textContent = `Error: ${error.message}`;
+        statusText.style.color = "red";
+        
+        // Reset recording state if needed
+        if (isRecording) {
+            isRecording = false;
+            recordBtn.classList.remove('recording');
+            recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record Speech';
+        }
+        
+        setTimeout(() => {
+            statusText.textContent = "Ready to translate";
+            statusText.style.color = "";
+        }, 4000);
+    }
+}
+
+    // Setup recorder with better error handling
+    async function setupRecorder() {
         try {
-            statusText.textContent = "Processing speech...";
-            const response = await fetch('/upload_audio', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Unknown error occurred');
+            // First check if MediaRecorder is available
+            if (typeof MediaRecorder === 'undefined') {
+                throw new Error("Audio recording is not supported in this browser");
             }
             
-            const data = await response.json();
+            // Request media permissions
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
             
-            // Update UI with recognition and translation results
-            originalText.value = data.recognized_text;
-            translatedText.value = data.translated_text;
-            originalAudioPath = data.original_audio_path;
-            translatedAudioPath = data.translated_audio_path;
+            // Create the recorder with specific MIME type and bitrate
+            const options = { 
+                mimeType: 'audio/webm;codecs=opus',
+                bitsPerSecond: 128000
+            };
             
-            // Enable play buttons
-            playOriginalBtn.disabled = false;
-            playTranslationBtn.disabled = false;
-            statusText.textContent = "Translation complete";
+            try {
+                mediaRecorder = new MediaRecorder(stream, options);
+            } catch (e) {
+                // Fallback to default options if specific format not supported
+                console.warn("Preferred recording format not supported, using default");
+                mediaRecorder = new MediaRecorder(stream);
+            }
             
-            // Add animation to the translated text
-            translatedText.classList.add('fade-in');
-            setTimeout(() => {
-                translatedText.classList.remove('fade-in');
-            }, 500);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
             
-        } catch (error) {
-            console.error("Error during translation:", error);
-            statusText.textContent = `Error: ${error.message}`;
+            mediaRecorder.onstart = () => {
+                audioChunks = [];
+                console.log("Recording started");
+            };
+            
+            mediaRecorder.onerror = (e) => {
+                console.error("MediaRecorder error:", e);
+                statusText.textContent = `Recording error: ${e.message || "Unknown error"}`;
+                statusText.style.color = "red";
+                
+                // Reset recording state
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record Speech';
+            };
+            
+            mediaRecorder.onstop = async () => {
+                console.log("Recording stopped, processing audio...");
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                
+                if (audioBlob.size > 0) {
+                    await sendAudioForTranslation(audioBlob);
+                } else {
+                    statusText.textContent = "No audio data recorded. Please try again.";
+                    statusText.style.color = "red";
+                    setTimeout(() => {
+                        statusText.textContent = "Ready to translate";
+                        statusText.style.color = "";
+                    }, 3000);
+                }
+                audioChunks = [];
+            };
+            
+            return true;
+        } catch (err) {
+            console.error("Error accessing microphone:", err);
+            statusText.textContent = `Microphone error: ${err.message || err}`;
             statusText.style.color = "red";
-            setTimeout(() => {
-                statusText.textContent = "Ready to translate";
-                statusText.style.color = "";
-            }, 3000);
+            recordBtn.disabled = true;
+            return false;
         }
-    }
-    
-    // Translate text input
+}    // Translate text input
     async function translateTextInput(text) {
         try {
             const response = await fetch('/translate_text', {
