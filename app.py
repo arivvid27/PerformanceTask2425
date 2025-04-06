@@ -77,43 +77,37 @@ def index():
 def upload_audio():
     temp_audio_path = None
     wav_path = None
-    
     try:
         if 'audio' not in request.files:
             return jsonify({'error': 'No audio file found'}), 400
-        
         audio_file = request.files['audio']
         input_language = request.form.get('input_language', 'english')
         output_language = request.form.get('output_language', 'french')
-        
         if input_language not in LANGUAGE_CODES:
             return jsonify({'error': f'Invalid input language: {input_language}'}), 400
         if output_language not in LANGUAGE_CODES:
             return jsonify({'error': f'Invalid output language: {output_language}'}), 400
-        
         temp_audio_path = f"static/audio/temp_{uuid.uuid4()}.webm"
         audio_file.save(temp_audio_path)
-        
         wav_path = f"static/audio/temp_{uuid.uuid4()}.wav"
-        
         try:
             audio = AudioSegment.from_file(temp_audio_path)
             audio.export(wav_path, format="wav")
         except Exception as e:
             return jsonify({'error': f'Audio conversion error: {str(e)}'}), 400
-        
         recognizer = sr.Recognizer()
         try:
             with sr.AudioFile(wav_path) as source:
                 audio_data = recognizer.record(source)
-                recognized_text = recognizer.recognize_google(audio_data, language=LANGUAGE_CODES[input_language])
+                recognized_text = recognizer.recognize_google(audio_data,
+                                                            language=LANGUAGE_CODES[input_language])
         except sr.UnknownValueError:
-            return jsonify({'error': 'Could not understand audio. Please speak clearly and try again.'}), 400
+            return jsonify({'error':
+                'Could not understand audio. Please speak clearly and try again.'}), 400
         except sr.RequestError as e:
             return jsonify({'error': f'Speech recognition service error: {str(e)}'}), 503
         except Exception as e:
             return jsonify({'error': f'Speech recognition error: {str(e)}'}), 500
-        
         try:
             original_audio_filename = f"original_{uuid.uuid4()}.mp3"
             original_audio_path = f"static/audio/{original_audio_filename}"
@@ -121,14 +115,14 @@ def upload_audio():
             original_tts.save(original_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating original audio: {str(e)}'}), 500
-        
         try:
             translated_text = translate_text(recognized_text, input_language, output_language)
             if not translated_text or translated_text.startswith("TRANSLATION ERROR"):
-                return jsonify({'error': translated_text if translated_text else 'Empty translation result'}), 500
+                return jsonify({'error': translated_text
+                                if translated_text
+                                else 'Empty translation result'}), 500
         except Exception as e:
             return jsonify({'error': f'Translation error: {str(e)}'}), 500
-        
         try:
             translated_audio_filename = f"translated_{uuid.uuid4()}.mp3"
             translated_audio_path = f"static/audio/{translated_audio_filename}"
@@ -136,28 +130,23 @@ def upload_audio():
             translated_tts.save(translated_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating translated audio: {str(e)}'}), 500
-        
         if os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
         if os.path.exists(wav_path):
             os.remove(wav_path)
-        
         return jsonify({
             'recognized_text': recognized_text,
             'translated_text': translated_text,
             'original_audio_path': original_audio_path,
             'translated_audio_path': translated_audio_path
         })
-    
     except Exception as e:
         print(f"CRITICAL ERROR: {str(e)}")
         print(traceback.format_exc())
-        
         if temp_audio_path and os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
         if wav_path and os.path.exists(wav_path):
             os.remove(wav_path)
-        
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 # Handles text translation and generates audio
@@ -168,20 +157,16 @@ def handle_text_translation():
     try:
         if not request.is_json:
             return jsonify({'error': 'Expected JSON data'}), 400
-        
         data = request.json
         input_text = data.get('text', '')
         input_language = data.get('input_language', 'english')
         output_language = data.get('output_language', 'french')
-        
         if not input_text:
             return jsonify({'error': 'No text provided for translation'}), 400
-        
         if input_language not in LANGUAGE_CODES:
             return jsonify({'error': f'Invalid input language: {input_language}'}), 400
         if output_language not in LANGUAGE_CODES:
             return jsonify({'error': f'Invalid output language: {output_language}'}), 400
-        
         try:
             original_audio_filename = f"original_{uuid.uuid4()}.mp3"
             original_audio_path = f"static/audio/{original_audio_filename}"
@@ -189,14 +174,12 @@ def handle_text_translation():
             original_tts.save(original_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating original audio: {str(e)}'}), 500
-        
         try:
             translated_text = translate_text(input_text, input_language, output_language)
             if not translated_text or translated_text.startswith("TRANSLATION ERROR"):
                 return jsonify({'error': translated_text if translated_text else 'Empty translation result'}), 500
         except Exception as e:
             return jsonify({'error': f'Translation error: {str(e)}'}), 500
-        
         try:
             translated_audio_filename = f"translated_{uuid.uuid4()}.mp3"
             translated_audio_path = f"static/audio/{translated_audio_filename}"
@@ -204,17 +187,14 @@ def handle_text_translation():
             translated_tts.save(translated_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating translated audio: {str(e)}'}), 500
-        
         return jsonify({
             'translated_text': translated_text,
             'original_audio_path': original_audio_path,
             'translated_audio_path': translated_audio_path
         })
-        
     except Exception as e:
         print(f"CRITICAL ERROR: {str(e)}")
         print(traceback.format_exc())
-        
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 # Translates text using Google Gemini API
@@ -249,23 +229,24 @@ def serve_audio(filename):
 def get_languages():
     return jsonify(LANGUAGE_CODES)
 
-# Handles 404 errors
-# Parameters: e (error object)
-# Returns: JSON or rendered HTML page
-@app.errorhandler(404)
-def page_not_found(e):
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'error': 'Resource not found'}), 404
-    return render_template('404.html'), 404
+# TODO Make sure to make 404 and 500 error pages for better user experience
+# # Handles 404 errors
+# # Parameters: e (error object)
+# # Returns: JSON or rendered HTML page
+# @app.errorhandler(404)
+# def page_not_found(e):
+#     if request.headers.get('Accept') == 'application/json':
+#         return jsonify({'error': 'Resource not found'}), 404
+#     return render_template('404.html'), 404
 
-# Handles 500 errors
-# Parameters: e (error object)
-# Returns: JSON or rendered HTML page
-@app.errorhandler(500)
-def server_error(e):
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'error': 'Internal server error'}), 500
-    return render_template('500.html'), 500
+# # Handles 500 errors
+# # Parameters: e (error object)
+# # Returns: JSON or rendered HTML page
+# @app.errorhandler(500)
+# def server_error(e):
+#     if request.headers.get('Accept') == 'application/json':
+#         return jsonify({'error': 'Internal server error'}), 500
+#     return render_template('500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
