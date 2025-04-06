@@ -8,14 +8,12 @@ from config import Config
 from services import translation_service, stt_service, tts_service
 from utils.helpers import save_uploaded_file
 
-# Initialize Flask app
+# Initialize Flask app and database
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Initialize database
 db = SQLAlchemy(app)
 
-# Ensure upload directories exist
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -49,11 +47,9 @@ def translate():
     if not text:
         return jsonify({'error': 'No text provided'}), 400
     
-    # Auto-detect source language if not provided
     if not source_lang:
         source_lang = translation_service.detect_language(text)
     
-    # Translate text
     translated_text = translation_service.translate_text(
         text=text,
         source_lang=source_lang,
@@ -92,7 +88,6 @@ def text_to_speech():
     if not audio_file:
         return jsonify({'error': 'Failed to generate speech'}), 500
     
-    # Store the file path in session for retrieval
     session['audio_file'] = audio_file
     
     return jsonify({
