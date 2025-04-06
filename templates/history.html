@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Translation History - Pythonese{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Translation History</h1>
+        
+        {% if translations %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border">
+                <thead>
+                    <tr>
+                        <th class="py-2 px-4 border-b">Source</th>
+                        <th class="py-2 px-4 border-b">Target</th>
+                        <th class="py-2 px-4 border-b">Original Text</th>
+                        <th class="py-2 px-4 border-b">Translated Text</th>
+                        <th class="py-2 px-4 border-b">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for translation in translations %}
+                    <tr class="hover:bg-gray-100">
+                        <td class="py-2 px-4 border-b">{{ languages.get(translation.source_language, translation.source_language) }}</td>
+                        <td class="py-2 px-4 border-b">{{ languages.get(translation.target_language, translation.target_language) }}</td>
+                        <td class="py-2 px-4 border-b">
+                            <div class="max-w-xs truncate">{{ translation.original_text }}</div>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <div class="max-w-xs truncate">{{ translation.translated_text }}</div>
+                        </td>
+                        <td class="py-2 px-4 border-b">{{ translation.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-10 text-gray-500">
+            <p>No translation history yet. Start translating to see your history here.</p>
+        </div>
+        {% endif %}
+        
+        <div class="mt-6 text-center">
+            <a href="{{ url_for('index') }}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Translator
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
