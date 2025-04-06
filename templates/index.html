@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythonese Translator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pythonese <span>Translator</span></h1>
+        
+        <div class="language-selector">
+            <div class="language-container">
+                <label for="input-language">Input Language:</label>
+                <select id="input-language">
+                    {% for language, code in languages.items() %}
+                        <option value="{{ language }}">{{ language.capitalize() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="swap-btn">
+                <button id="swap-languages">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+            </div>
+            
+            <div class="language-container">
+                <label for="output-language">Output Language:</label>
+                <select id="output-language">
+                    {% for language, code in languages.items() %}
+                        <option value="{{ language }}" {% if language == 'french' %}selected{% endif %}>{{ language.capitalize() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="translation-container">
+            <div class="translation-box">
+                <div class="translation-header">
+                    <h3>Original</h3>
+                </div>
+                <div class="translation-content">
+                    <textarea id="original-text" placeholder="Type or speak your text here..."></textarea>
+                    <button id="play-original" class="play-btn corner-btn" disabled>
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="translation-box">
+                <div class="translation-header">
+                    <h3>Translation</h3>
+                </div>
+                <div class="translation-content">
+                    <textarea id="translated-text" placeholder="Translation will appear here..." readonly></textarea>
+                    <button id="play-translation" class="play-btn corner-btn" disabled>
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="translate-btn" class="action-btn">
+                <i class="fas fa-language"></i> Translate Text
+            </button>
+            <button id="record-btn" class="action-btn pulse">
+                <i class="fas fa-microphone"></i> Record Speech
+            </button>
+        </div>
+        
+        <p id="status">Ready to translate</p>
+    </div>
+    
+    <audio id="audio-player"></audio>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,11 +1,6 @@
-os
-time
-asyncio
-threading
-colorama
-keyboard
-speech_recognition
+flask
+SpeechRecognition
+google-generativeai
 gtts
-playsound3
-googletrans
-colorama
+uuid
+pydub
