@@ -17,7 +17,7 @@ The Main code for the Pythonese application
 import traceback
 import os
 import uuid
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, abort
 import speech_recognition as sr
 import google.generativeai as genai
 from gtts import gTTS
@@ -69,6 +69,25 @@ if not os.path.exists('static/audio'):
 @app.route('/')
 def index():
     return render_template('index.html', languages=LANGUAGE_CODES)
+
+# Placeholder routes that will trigger 404
+@app.route('/dictionary')
+def dictionary():
+    # This is a placeholder that will eventually lead to the dictionary feature
+    # For now we'll intentionally trigger a 404 error
+    return render_template('non_existent_page.html')
+
+@app.route('/live')
+def live_translate():
+    # This is a placeholder that will eventually lead to the live translation feature
+    # For now we'll intentionally trigger a 404 error
+    return render_template('non_existent_page.html')
+
+@app.route('/settings')
+def settings():
+    # This is a placeholder that will eventually lead to the settings page
+    # For now we'll intentionally trigger a 404 error
+    return render_template('non_existent_page.html')
 
 # Handles audio upload, processes it, and returns translation
 # Parameters: Audio file (file), input_language (string), output_language (string)
@@ -197,23 +216,42 @@ def handle_text_translation():
         print(traceback.format_exc())
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
-# Translates text using Google Gemini API
+# Translates text using Google Gemini API with retry logic
 # Parameters: text (string), source_language (string), target_language (string)
 # Returns: Translated text (string)
 def translate_text(text, source_language, target_language):
-    try:
-        model = genai.GenerativeModel('gemini-2.0-flash-lite')
-        prompt = f"Translate the following text from {source_language} to {target_language}: '{text}', and return only the translated text without any additional formatting or explanation."
-        response = model.generate_content(prompt)
-        translated = response.text
-        if translated.startswith('"') and translated.endswith('"'):
-            translated = translated[1:-1]
-        if translated.startswith("'") and translated.endswith("'"):
-            translated = translated[1:-1]
-        return translated
-    except Exception as e:
-        print(f"Translation error: {e}")
-        return f"TRANSLATION ERROR: {e}"
+    max_attempts = 3
+    attempt = 0
+    backoff_time = 1  # Initial backoff time in seconds
+    
+    while attempt < max_attempts:
+        try:
+            model = genai.GenerativeModel('gemini-2.0-flash-lite')
+            prompt = f"Translate the following text from {source_language} to {target_language}: '{text}', and return only the translated text without any additional formatting or explanation."
+            response = model.generate_content(prompt)
+            translated = response.text
+            
+            if translated.startswith('"') and translated.endswith('"'):
+                translated = translated[1:-1]
+            if translated.startswith("'") and translated.endswith("'"):
+                translated = translated[1:-1]
+                
+            return translated
+            
+        except Exception as e:
+            attempt += 1
+            error_msg = str(e)
+            print(f"Translation attempt {attempt} failed: {error_msg}")
+            
+            if attempt < max_attempts:
+                # Exponential backoff
+                import time
+                print(f"Retrying in {backoff_time} seconds...")
+                time.sleep(backoff_time)
+                backoff_time *= 2  # Double the backoff time for next attempt
+            else:
+                print(f"All {max_attempts} translation attempts failed")
+                return f"TRANSLATION ERROR: {error_msg}"
 
 # Serves audio files from the static directory
 # Parameters: filename (string)
@@ -229,24 +267,30 @@ def serve_audio(filename):
 def get_languages():
     return jsonify(LANGUAGE_CODES)
 
-# TODO Make sure to make 404 and 500 error pages for better user experience
-# # Handles 404 errors
-# # Parameters: e (error object)
-# # Returns: JSON or rendered HTML page
-# @app.errorhandler(404)
-# def page_not_found(e):
-#     if request.headers.get('Accept') == 'application/json':
-#         return jsonify({'error': 'Resource not found'}), 404
-#     return render_template('404.html'), 404
+# Simulates an endpoint that will trigger a 500 error for testing purposes
+@app.route('/test-500')
+def test_500():
+    # Deliberate division by zero to trigger a 500 error
+    result = 1 / 0
+    return result
 
-# # Handles 500 errors
-# # Parameters: e (error object)
-# # Returns: JSON or rendered HTML page
-# @app.errorhandler(500)
-# def server_error(e):
-#     if request.headers.get('Accept') == 'application/json':
-#         return jsonify({'error': 'Internal server error'}), 500
-#     return render_template('500.html'), 500
+# Handles 404 errors
+# Parameters: e (error object)
+# Returns: JSON or rendered HTML page
+@app.errorhandler(404)
+def page_not_found(e):
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'error': 'Resource not found'}), 404
+    return render_template('404.html', active_page=None), 404
+
+# Handles 500 errors
+# Parameters: e (error object)
+# Returns: JSON or rendered HTML page
+@app.errorhandler(500)
+def server_error(e):
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'error': 'Internal server error'}), 500
+    return render_template('500.html', active_page=None), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

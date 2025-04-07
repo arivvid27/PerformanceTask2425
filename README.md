@@ -57,3 +57,17 @@ If you continue to have issues, ensure that:
 1. The FFmpeg binaries are properly installed
 2. The path to FFmpeg is correctly set in your environment variables
 3. You've restarted your application server after making these changes
+
+
+# Running the Application
+To run the application, follow these steps:
+1. Install the required packages using `pip install -r requirements.txt`.
+   - If you encounter issues with `ffmpeg`, ensure you have FFmpeg installed and its path is correctly set in your environment variables.
+   - If you're using a virtual environment, activate it before installing packages.
+
+2. Run the application using `python app.py`.
+   - If you're using a virtual environment, activate it before running the application.
+   - If you're using a different port, update the `app.run()` call in `app.py` to use the desired port.
+
+3. Access the application in your web browser at `http://localhost:5000`, or `http://127.0.0.1:5000`.
+   - If you're using a different port, replace `5000` with the port you've specified in `app.py`.

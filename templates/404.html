@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Pythonese</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
+</head>
+<body class="error-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">Pythonese</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link active"><i class="fas fa-language"></i> Translate</a>
+                <a href="/dictionary" class="nav-link"><i class="fas fa-book"></i> Dictionary</a>
+                <a href="/live" class="nav-link"><i class="fas fa-microphone-alt"></i> Live Translate</a>
+                <a href="/settings" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+            </div>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-code">4<span class="digit-animation">0</span>4</div>
+            <h1 class="error-title">Page Not Found</h1>
+            <p class="error-message">Oops! The page you're looking for has been lost in translation.</p>
+            <div class="error-animation">
+                <div class="planet"></div>
+                <div class="astronaut">
+                    <!-- <div class="astronaut-body"></div> -->
+                    <div class="astronaut-head"></div>
+                </div>
+            </div>
+            <a href="/" class="error-btn">
+                <i class="fas fa-home"></i> Go Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('show');
+        });
+        
+        // Digit animation
+        const digit = document.querySelector('.digit-animation');
+        let counter = 0;
+        const digits = ['0', '1', '0', '4', '0', '2', '0', '9', '0', '5']; // 404
+        
+        setInterval(() => {
+            digit.textContent = digits[counter];
+            counter = (counter + 1) % digits.length;
+        }, 500);
+        
+        // Random stars animation
+        const errorContainer = document.querySelector('.error-container');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animationDelay = `${Math.random() * 5}s`;
+            errorContainer.appendChild(star);
+        }
+        
+        // Astronaut floating animation
+        const astronaut = document.querySelector('.astronaut');
+        let posX = 0;
+        let posY = 0;
+        let dirX = 1;
+        let dirY = 1;
+        
+        setInterval(() => {
+            posX += 0.2 * dirX;
+            posY += 0.1 * dirY;
+            
+            if (posX > 20 || posX < -20) dirX *= -1;
+            if (posY > 10 || posY < -10) dirY *= -1;
+            
+            astronaut.style.transform = `translate(${posX}px, ${posY}px)`;
+        }, 50);
+    </script>
+</body>
+</html>
