@@ -75,19 +75,19 @@ def index():
 def dictionary():
     # This is a placeholder that will eventually lead to the dictionary feature
     # For now we'll intentionally trigger a 404 error
-    return render_template('non_existent_page.html')
+    return render_template('404.html')
 
 @app.route('/live')
 def live_translate():
     # This is a placeholder that will eventually lead to the live translation feature
     # For now we'll intentionally trigger a 404 error
-    return render_template('non_existent_page.html')
+    return render_template('404.html')
 
 @app.route('/settings')
 def settings():
     # This is a placeholder that will eventually lead to the settings page
     # For now we'll intentionally trigger a 404 error
-    return render_template('non_existent_page.html')
+    return render_template('404.html')
 
 # Handles audio upload, processes it, and returns translation
 # Parameters: Audio file (file), input_language (string), output_language (string)
