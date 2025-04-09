@@ -11,6 +11,7 @@ The Main code for the Pythonese application
 # ! google.generativeai: https://pypi.org/project/google-generativeai/ By: Google LLC
 # ! gtts: https://pypi.org/project/gTTS/ By: Eduardo Silva (gTTS)
 # ! pydub: https://pypi.org/project/pydub/ By: James A. Smith (pydub)
+# ! jinja2: https://pypi.org/project/Jinja2/ By: Armin Ronacher and contributors
 
 # ! The code below is written by me, Videsh Arivazhagan, the author of this project.
 
@@ -22,6 +23,7 @@ import speech_recognition as sr
 import google.generativeai as genai
 from gtts import gTTS
 from pydub import AudioSegment
+from jinja2 import TemplateNotFound
 
 app = Flask(__name__)
 
@@ -63,31 +65,54 @@ LANGUAGE_CODES = {
 if not os.path.exists('static/audio'):
     os.makedirs('static/audio')
 
+# Helper function to validate language selection and get language code
+# Parameters: language (string), default_language (string, optional)
+# Returns: The valid language code (string)
+def get_language_code(language, default_language='english'):
+    """
+    Validates the provided language and returns the corresponding language code.
+    If the language is invalid, returns the code for the default language.
+    """
+    language = language.lower() if isinstance(language, str) else ''
+    
+    if language in LANGUAGE_CODES:
+        return LANGUAGE_CODES[language]
+    else:
+        # Log the invalid language attempt
+        print(f"Warning: Invalid language '{language}' requested. Using {default_language} instead.")
+        return LANGUAGE_CODES[default_language]
+
 # Renders the index page
 # Parameters: None
 # Returns: Rendered HTML page
 @app.route('/')
 def index():
-    return render_template('index.html', languages=LANGUAGE_CODES)
+    try:
+        return render_template('index.html', languages=LANGUAGE_CODES)
+    except TemplateNotFound as e:
+        return redirect(url_for('page_not_found', error=str(e)))
 
 # Placeholder routes that will trigger 404
 @app.route('/dictionary')
 def dictionary():
-    # This is a placeholder that will eventually lead to the dictionary feature
-    # For now we'll intentionally trigger a 404 error
-    return render_template('404.html')
+    try:
+        return render_template('dictionary.html')
+    except TemplateNotFound as e:
+        return redirect(url_for('page_not_found', error=str(e)))
 
 @app.route('/live')
 def live_translate():
-    # This is a placeholder that will eventually lead to the live translation feature
-    # For now we'll intentionally trigger a 404 error
-    return render_template('404.html')
+    try:
+        return render_template('live_translate.html')
+    except TemplateNotFound as e:
+        return redirect(url_for('page_not_found', error=str(e)))
 
 @app.route('/settings')
 def settings():
-    # This is a placeholder that will eventually lead to the settings page
-    # For now we'll intentionally trigger a 404 error
-    return render_template('404.html')
+    try:
+        return render_template('settings.html')
+    except TemplateNotFound as e:
+        return redirect(url_for('page_not_found', error=str(e)))
 
 # Handles audio upload, processes it, and returns translation
 # Parameters: Audio file (file), input_language (string), output_language (string)
@@ -102,10 +127,11 @@ def upload_audio():
         audio_file = request.files['audio']
         input_language = request.form.get('input_language', 'english')
         output_language = request.form.get('output_language', 'french')
-        if input_language not in LANGUAGE_CODES:
-            return jsonify({'error': f'Invalid input language: {input_language}'}), 400
-        if output_language not in LANGUAGE_CODES:
-            return jsonify({'error': f'Invalid output language: {output_language}'}), 400
+        
+        # Use the helper function to validate languages and get codes
+        input_lang_code = get_language_code(input_language)
+        output_lang_code = get_language_code(output_language, 'french')
+        
         temp_audio_path = f"static/audio/temp_{uuid.uuid4()}.webm"
         audio_file.save(temp_audio_path)
         wav_path = f"static/audio/temp_{uuid.uuid4()}.wav"
@@ -119,7 +145,7 @@ def upload_audio():
             with sr.AudioFile(wav_path) as source:
                 audio_data = recognizer.record(source)
                 recognized_text = recognizer.recognize_google(audio_data,
-                                                            language=LANGUAGE_CODES[input_language])
+                                                            language=input_lang_code)
         except sr.UnknownValueError:
             return jsonify({'error':
                 'Could not understand audio. Please speak clearly and try again.'}), 400
@@ -130,7 +156,7 @@ def upload_audio():
         try:
             original_audio_filename = f"original_{uuid.uuid4()}.mp3"
             original_audio_path = f"static/audio/{original_audio_filename}"
-            original_tts = gTTS(text=recognized_text, lang=LANGUAGE_CODES[input_language])
+            original_tts = gTTS(text=recognized_text, lang=input_lang_code)
             original_tts.save(original_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating original audio: {str(e)}'}), 500
@@ -145,7 +171,7 @@ def upload_audio():
         try:
             translated_audio_filename = f"translated_{uuid.uuid4()}.mp3"
             translated_audio_path = f"static/audio/{translated_audio_filename}"
-            translated_tts = gTTS(text=translated_text, lang=LANGUAGE_CODES[output_language])
+            translated_tts = gTTS(text=translated_text, lang=output_lang_code)
             translated_tts.save(translated_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating translated audio: {str(e)}'}), 500
@@ -180,16 +206,18 @@ def handle_text_translation():
         input_text = data.get('text', '')
         input_language = data.get('input_language', 'english')
         output_language = data.get('output_language', 'french')
+        
         if not input_text:
             return jsonify({'error': 'No text provided for translation'}), 400
-        if input_language not in LANGUAGE_CODES:
-            return jsonify({'error': f'Invalid input language: {input_language}'}), 400
-        if output_language not in LANGUAGE_CODES:
-            return jsonify({'error': f'Invalid output language: {output_language}'}), 400
+            
+        # Use the helper function to validate languages and get codes
+        input_lang_code = get_language_code(input_language)
+        output_lang_code = get_language_code(output_language, 'french')
+        
         try:
             original_audio_filename = f"original_{uuid.uuid4()}.mp3"
             original_audio_path = f"static/audio/{original_audio_filename}"
-            original_tts = gTTS(text=input_text, lang=LANGUAGE_CODES[input_language])
+            original_tts = gTTS(text=input_text, lang=input_lang_code)
             original_tts.save(original_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating original audio: {str(e)}'}), 500
@@ -202,7 +230,7 @@ def handle_text_translation():
         try:
             translated_audio_filename = f"translated_{uuid.uuid4()}.mp3"
             translated_audio_path = f"static/audio/{translated_audio_filename}"
-            translated_tts = gTTS(text=translated_text, lang=LANGUAGE_CODES[output_language])
+            translated_tts = gTTS(text=translated_text, lang=output_lang_code)
             translated_tts.save(translated_audio_path)
         except Exception as e:
             return jsonify({'error': f'Error generating translated audio: {str(e)}'}), 500
@@ -274,20 +302,41 @@ def test_500():
     result = 1 / 0
     return result
 
+# API endpoint to check if a language is supported
+# Parameters: language (string)
+# Returns: JSON response with language validity and code
+@app.route('/check_language/<language>')
+def check_language(language):
+    # Use the helper function to check if a language is supported
+    language = language.lower() if isinstance(language, str) else ''
+    is_supported = language in LANGUAGE_CODES
+    
+    if is_supported:
+        lang_code = get_language_code(language)
+        return jsonify({
+            'language': language,
+            'is_supported': True,
+            'code': lang_code
+        })
+    else:
+        return jsonify({
+            'language': language,
+            'is_supported': False,
+            'supported_languages': list(LANGUAGE_CODES.keys())
+        })
+
 # Handles 404 errors
 # Parameters: e (error object)
 # Returns: JSON or rendered HTML page
-@app.errorhandler(404)
-def page_not_found(e):
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'error': 'Resource not found'}), 404
+@app.route('/page_not_found')
+def page_not_found():
     return render_template('404.html', active_page=None), 404
 
 # Handles 500 errors
 # Parameters: e (error object)
 # Returns: JSON or rendered HTML page
 @app.errorhandler(500)
-def server_error(e):
+def server_error():
     if request.headers.get('Accept') == 'application/json':
         return jsonify({'error': 'Internal server error'}), 500
     return render_template('500.html', active_page=None), 500
