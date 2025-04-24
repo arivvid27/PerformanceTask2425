@@ -12,13 +12,14 @@ The Main code for the Pythonese application
 # ! gtts: https://pypi.org/project/gTTS/ By: Eduardo Silva (gTTS)
 # ! pydub: https://pypi.org/project/pydub/ By: James A. Smith (pydub)
 # ! jinja2: https://pypi.org/project/Jinja2/ By: Armin Ronacher and contributors
+# ! time: https://docs.python.org/3/library/time.html By: Python Software Foundation (PSF)
 
-# ! The code below is written by me, Videsh Arivazhagan, the author of this project.
+# ! The code below is written by me, the author of this project.
 
 import traceback
 import os
 import uuid
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, abort
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
 import speech_recognition as sr
 import google.generativeai as genai
 from gtts import gTTS
@@ -92,7 +93,10 @@ def index():
     except TemplateNotFound as e:
         return redirect(url_for('page_not_found', error=str(e)))
 
-# Placeholder routes that will trigger 404
+
+# Renders the about page
+# Parameters: None
+# Returns: Rendered HTML page
 @app.route('/dictionary')
 def dictionary():
     try:
@@ -100,6 +104,9 @@ def dictionary():
     except TemplateNotFound as e:
         return redirect(url_for('page_not_found', error=str(e)))
 
+# Renders the live translation page
+# Parameters: None
+# Returns: Rendered HTML page
 @app.route('/live')
 def live_translate():
     try:
@@ -107,6 +114,9 @@ def live_translate():
     except TemplateNotFound as e:
         return redirect(url_for('page_not_found', error=str(e)))
 
+# Renders the settings page
+# Parameters: None
+# Returns: Rendered HTML page
 @app.route('/settings')
 def settings():
     try:
@@ -127,8 +137,7 @@ def upload_audio():
         audio_file = request.files['audio']
         input_language = request.form.get('input_language', 'english')
         output_language = request.form.get('output_language', 'french')
-        
-        # Use the helper function to validate languages and get codes
+
         input_lang_code = get_language_code(input_language)
         output_lang_code = get_language_code(output_language, 'french')
         
@@ -210,7 +219,6 @@ def handle_text_translation():
         if not input_text:
             return jsonify({'error': 'No text provided for translation'}), 400
             
-        # Use the helper function to validate languages and get codes
         input_lang_code = get_language_code(input_language)
         output_lang_code = get_language_code(output_language, 'french')
         
@@ -250,7 +258,7 @@ def handle_text_translation():
 def translate_text(text, source_language, target_language):
     max_attempts = 3
     attempt = 0
-    backoff_time = 1  # Initial backoff time in seconds
+    backoff_time = 1
     
     while attempt < max_attempts:
         try:
@@ -272,11 +280,10 @@ def translate_text(text, source_language, target_language):
             print(f"Translation attempt {attempt} failed: {error_msg}")
             
             if attempt < max_attempts:
-                # Exponential backoff
                 import time
                 print(f"Retrying in {backoff_time} seconds...")
                 time.sleep(backoff_time)
-                backoff_time *= 2  # Double the backoff time for next attempt
+                backoff_time *= 2
             else:
                 print(f"All {max_attempts} translation attempts failed")
                 return f"TRANSLATION ERROR: {error_msg}"
@@ -295,10 +302,8 @@ def serve_audio(filename):
 def get_languages():
     return jsonify(LANGUAGE_CODES)
 
-# Simulates an endpoint that will trigger a 500 error for testing purposes
 @app.route('/test-500')
 def test_500():
-    # Deliberate division by zero to trigger a 500 error
     result = 1 / 0
     return result
 
@@ -307,7 +312,6 @@ def test_500():
 # Returns: JSON response with language validity and code
 @app.route('/check_language/<language>')
 def check_language(language):
-    # Use the helper function to check if a language is supported
     language = language.lower() if isinstance(language, str) else ''
     is_supported = language in LANGUAGE_CODES
     
